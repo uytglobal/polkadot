@@ -24,17 +24,19 @@ use service::CustomConfiguration;
 ///
 /// You must pass a libp2p transport that supports .
 #[wasm_bindgen]
-pub async fn start_client(wasm_ext: browser_utils::Transport) -> Result<browser_utils::Client, JsValue> {
-	start_inner(wasm_ext)
+pub async fn start_client(chain_spec: String, wasm_ext: browser_utils::Transport) -> Result<browser_utils::Client, JsValue> {
+	start_inner(chain_spec, wasm_ext)
 		.await
 		.map_err(|err| JsValue::from_str(&err.to_string()))
 }
 
-async fn start_inner(wasm_ext: browser_utils::Transport) -> Result<browser_utils::Client, Box<dyn std::error::Error>> {
+async fn start_inner(chain_spec: String, wasm_ext: browser_utils::Transport) -> Result<browser_utils::Client, Box<dyn std::error::Error>> {
 	browser_utils::set_console_error_panic_hook();
 	browser_utils::init_console_log(log::Level::Info)?;
 
-	let chain_spec = ChainSpec::Kusama.load().map_err(|e| format!("{:?}", e))?;
+	let chain_spec = ChainSpec::from(&chain_spec)
+		.ok_or_else(|| format!("Unknown ChainSpec: {}", chain_spec))?
+		.load().map_err(|e| format!("{:?}", e))?;
 	let config: Configuration<CustomConfiguration, _, _> = browser_utils::browser_configuration(wasm_ext, chain_spec)
 		.await?;
 
