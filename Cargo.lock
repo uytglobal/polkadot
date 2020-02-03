@@ -2052,6 +2052,7 @@ dependencies = [
  "pallet-transaction-payment-rpc-runtime-api 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
  "pallet-treasury 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
  "pallet-utility 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
+ "pallet-vesting 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
  "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "polkadot-parachain 0.7.20",
  "polkadot-primitives 0.7.20",
@@ -3396,6 +3397,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-vesting"
+version = "2.0.0"
+source = "git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm#93552172643d0a63dbf5c63ce9fe40690c6da9b5"
+dependencies = [
+ "enumflags2 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-support 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
+ "frame-system 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
+ "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.102 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sp-io 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
+ "sp-runtime 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
+ "sp-std 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
+]
+
+[[package]]
 name = "parity-bytes"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3910,6 +3926,7 @@ dependencies = [
  "pallet-transaction-payment 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
  "pallet-transaction-payment-rpc-runtime-api 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
  "pallet-treasury 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
+ "pallet-vesting 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)",
  "parity-scale-codec 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "polkadot-parachain 0.7.20",
  "polkadot-primitives 0.7.20",
@@ -7607,6 +7624,7 @@ dependencies = [
 "checksum pallet-transaction-payment-rpc-runtime-api 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)" = "<none>"
 "checksum pallet-treasury 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)" = "<none>"
 "checksum pallet-utility 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)" = "<none>"
+"checksum pallet-vesting 2.0.0 (git+https://github.com/paritytech/substrate?branch=ashley-polkadot-wasm)" = "<none>"
 "checksum parity-bytes 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0c276d76c5333b8c2579e02d49a06733a55b8282d2d9b13e8d53b6406bd7e30a"
 "checksum parity-multiaddr 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "045b3c7af871285146300da35b1932bb6e4639b66c7c98e85d06a32cbc4e8fa7"
 "checksum parity-multiaddr 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6de20a133b50f5120c6b8284ee88c5017fb167149208b3ee2e95f8719a434dc4"
