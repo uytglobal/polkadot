@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Substrate.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::ChainSpec;
 use log::info;
 use wasm_bindgen::prelude::*;
-use service::IsKusama;
+use service::{IsKusama, ChainSpec};
 
 /// Starts the client.
 ///
@@ -33,9 +32,7 @@ async fn start_inner(chain_spec: String, wasm_ext: browser_utils::Transport) -> 
 	browser_utils::set_console_error_panic_hook();
 	browser_utils::init_console_log(log::Level::Info)?;
 
-	let chain_spec = ChainSpec::from(&chain_spec)
-		.ok_or_else(|| format!("Chain spec: {:?} doesn't exist.", chain_spec))?
-		.load()
+	let chain_spec = ChainSpec::from_json_bytes(chain_spec.as_bytes().to_vec())
 		.map_err(|e| format!("{:?}", e))?;
 	let config = browser_utils::browser_configuration(wasm_ext, chain_spec)
 		.await?;
