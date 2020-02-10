@@ -1,2 +1,9 @@
 doc
 **/target
+docker/
+**/*.md
+**/*.txt
+.git/
+
+# dotfiles in the project root
+.*/
