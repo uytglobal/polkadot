@@ -309,6 +309,7 @@ decl_module! {
 		}
 
 		fn on_finalize() {
+			println!("Update exists? {}", <Self as Store>::DidUpdate::exists());
 			assert!(<Self as Store>::DidUpdate::exists(), "Parachain heads must be updated once in the block");
 		}
 	}
@@ -1272,14 +1273,19 @@ mod tests {
 		Registrar::on_initialize(System::block_number());
 		Parachains::on_initialize(System::block_number());
 	}
+
+	fn finalize_block() {
+		println!("Finalizing {}", System::block_number());
+		Parachains::on_finalize(System::block_number());
+		Registrar::on_finalize(System::block_number());
+		System::on_finalize(System::block_number());
+	}
+
 	fn run_to_block(n: u64) {
 		println!("Running until block {}", n);
 		while System::block_number() < n {
 			if System::block_number() > 1 {
-				println!("Finalizing {}", System::block_number());
-				Parachains::on_finalize(System::block_number());
-				Registrar::on_finalize(System::block_number());
-				System::on_finalize(System::block_number());
+				finalize_block();
 			}
 			System::set_block_number(System::block_number() + 1);
 			init_block();
@@ -1743,5 +1749,19 @@ mod tests {
 	fn empty_trie_root_const_is_blake2_hashed_null_node() {
 		let hashed_null_node = <NodeCodec<Blake2Hasher> as trie_db::NodeCodec>::hashed_null_node();
 		assert_eq!(hashed_null_node, EMPTY_TRIE_ROOT.into())
+	}
+
+	#[test]
+	#[should_panic]
+	fn no_set_heads_panics() {
+		let parachains = vec![
+			(0u32.into(), vec![], vec![]),
+			(1u32.into(), vec![], vec![]),
+		];
+
+		new_test_ext(parachains.clone()).execute_with(|| {
+			init_block();
+			finalize_block();
+		});
 	}
 }
