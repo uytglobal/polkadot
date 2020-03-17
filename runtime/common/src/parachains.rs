@@ -309,7 +309,9 @@ decl_module! {
 		}
 
 		fn on_finalize() {
-			println!("Update exists? {}", <Self as Store>::DidUpdate::exists());
+			if_std! {
+				println!("Update exists? {}", <Self as Store>::DidUpdate::exists());
+			}
 			assert!(<Self as Store>::DidUpdate::exists(), "Parachain heads must be updated once in the block");
 		}
 	}
