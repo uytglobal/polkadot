@@ -177,16 +177,16 @@ decl_storage! {
 		NextFreeId: ParaId = LOWEST_USER_ID;
 
 		/// Pending swap operations.
-		PendingSwap: map hasher(twox_64_concat) ParaId => Option<ParaId>;
+		PendingSwap: map hasher(twox_32_concat) ParaId => Option<ParaId>;
 
 		/// Map of all registered parathreads/chains.
-		Paras get(fn paras): map hasher(twox_64_concat) ParaId => Option<ParaInfo>;
+		Paras get(fn paras): map hasher(twox_32_concat) ParaId => Option<ParaInfo>;
 
 		/// The current queue for parathreads that should be retried.
 		RetryQueue get(fn retry_queue): Vec<Vec<(ParaId, CollatorId)>>;
 
 		/// Users who have paid a parathread's deposit
-		Debtors: map hasher(twox_64_concat) ParaId => T::AccountId;
+		Debtors: map hasher(twox_32_concat) ParaId => T::AccountId;
 	}
 	add_extra_genesis {
 		config(parachains): Vec<(ParaId, Vec<u8>, Vec<u8>)>;

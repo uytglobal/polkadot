@@ -329,16 +329,16 @@ decl_storage! {
 		/// All authorities' keys at the moment.
 		pub Authorities get(fn authorities): Vec<ValidatorId>;
 		/// The parachains registered at present.
-		pub Code get(fn parachain_code): map hasher(twox_64_concat) ParaId => Option<Vec<u8>>;
+		pub Code get(fn parachain_code): map hasher(twox_32_concat) ParaId => Option<Vec<u8>>;
 		/// The heads of the parachains registered at present.
-		pub Heads get(fn parachain_head): map hasher(twox_64_concat) ParaId => Option<Vec<u8>>;
+		pub Heads get(fn parachain_head): map hasher(twox_32_concat) ParaId => Option<Vec<u8>>;
 		/// Messages ready to be dispatched onto the relay chain. It is subject to
 		/// `MAX_MESSAGE_COUNT` and `WATERMARK_MESSAGE_SIZE`.
-		pub RelayDispatchQueue: map hasher(twox_64_concat) ParaId => Vec<UpwardMessage>;
+		pub RelayDispatchQueue: map hasher(twox_32_concat) ParaId => Vec<UpwardMessage>;
 		/// Size of the dispatch queues. Separated from actual data in order to avoid costly
 		/// decoding when checking receipt validity. First item in tuple is the count of messages
 		///	second if the total length (in bytes) of the message payloads.
-		pub RelayDispatchQueueSize: map hasher(twox_64_concat) ParaId => (u32, u32);
+		pub RelayDispatchQueueSize: map hasher(twox_32_concat) ParaId => (u32, u32);
 		/// The ordered list of ParaIds that have a `RelayDispatchQueue` entry.
 		NeedsDispatch: Vec<ParaId>;
 
