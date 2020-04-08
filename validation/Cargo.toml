@@ -18,22 +18,22 @@ parachain = { package = "polkadot-parachain", path = "../parachain" }
 polkadot-primitives = { path = "../primitives" }
 polkadot-erasure-coding = { path = "../erasure-coding" }
 table = { package = "polkadot-statement-table", path = "../statement-table" }
-grandpa = { package = "sc-finality-grandpa", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-inherents = { package = "sp-inherents", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-consensus = { package = "sp-consensus", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-primitives = { package = "sp-core", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-txpool-api = { package = "sp-transaction-pool", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-sp-api = { git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-sp-timestamp = { git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-block-builder = { package = "sc-block-builder", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-trie = { package = "sp-trie", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-runtime_primitives = { package = "sp-runtime", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
+grandpa = { package = "sc-finality-grandpa", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+inherents = { package = "sp-inherents", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+consensus = { package = "sp-consensus", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+primitives = { package = "sp-core", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+txpool-api = { package = "sp-transaction-pool", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+sp-timestamp = { git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+block-builder = { package = "sc-block-builder", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+trie = { package = "sp-trie", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+runtime_primitives = { package = "sp-runtime", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
 bitvec = { version = "0.17.4", default-features = false, features = ["alloc"] }
-runtime_babe = { package = "pallet-babe", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-babe-primitives = { package = "sp-consensus-babe", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
-keystore = { package = "sc-keystore", git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
+runtime_babe = { package = "pallet-babe", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+babe-primitives = { package = "sp-consensus-babe", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
+keystore = { package = "sc-keystore", git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
 
 [dev-dependencies]
-sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "cecton-cumulus-branch" }
+sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "cecton-keep-unpinned-para-blocks" }
