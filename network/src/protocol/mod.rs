@@ -1369,7 +1369,7 @@ impl<N: NetworkServiceOps> Service<N> {
 	/// Take care to drop the stream, as the sending side will not be cleaned
 	/// up until it is.
 	pub fn checked_statements(&self, relay_parent: Hash)
-		-> Pin<Box<dyn Stream<Item = SignedStatement>>> {
+		-> Pin<Box<dyn Stream<Item = SignedStatement> + Send>> {
 		let (tx, rx) = oneshot::channel();
 		let mut sender = self.sender.clone();
 
