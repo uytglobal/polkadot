@@ -571,6 +571,15 @@ impl<T: Trait + Send + Sync> sp_std::fmt::Debug for LimitParathreadCommits<T> wh
 	}
 }
 
+impl<T: Trait + Send + Sync> Default for LimitParathreadCommits<T>
+where
+	<T as system::Trait>::Call: IsSubType<Module<T>, T>,
+{
+	fn default() -> LimitParathreadCommits<T> {
+		LimitParathreadCommits(Default::default())
+	}
+}
+
 /// Custom validity errors used in Polkadot while validating transactions.
 #[repr(u8)]
 pub enum ValidityError {
@@ -852,9 +861,12 @@ mod tests {
 		type ValidationUpgradeFrequency = ValidationUpgradeFrequency;
 		type ValidationUpgradeDelay = ValidationUpgradeDelay;
 		type SlashPeriod = SlashPeriod;
-		type Proof = session::historical::Proof;
+		type Proof = sp_session::MembershipProof;
 		type KeyOwnerProofSystem = session::historical::Module<Test>;
-		type IdentificationTuple = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, Vec<u8>)>>::IdentificationTuple;
+		type IdentificationTuple = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
+			KeyTypeId,
+			Vec<u8>,
+		)>>::IdentificationTuple;
 		type ReportOffence = ();
 		type BlockHashConversion = sp_runtime::traits::Identity;
 	}

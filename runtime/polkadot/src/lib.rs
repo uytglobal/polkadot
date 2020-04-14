@@ -41,8 +41,8 @@ use sp_runtime::{
 	},
 	curve::PiecewiseLinear,
 	traits::{
-		BlakeTwo256, Block as BlockT, SignedExtension, OpaqueKeys, ConvertInto,
-		IdentityLookup, DispatchInfoOf,
+		BlakeTwo256, Block as BlockT, ConvertInto, DispatchInfoOf, Extrinsic as ExtrinsicT,
+		IdentityLookup, OpaqueKeys, SaturatedConversion, SignedExtension,
 	},
 };
 #[cfg(feature = "runtime-benchmarks")]
@@ -54,7 +54,8 @@ use version::NativeVersion;
 use sp_core::OpaqueMetadata;
 use sp_staking::SessionIndex;
 use frame_support::{
-	parameter_types, construct_runtime, traits::{KeyOwnerProofSystem, SplitTwoWays, Randomness},
+	construct_runtime, debug, parameter_types,
+	traits::{KeyOwnerProofSystem, SplitTwoWays, Randomness},
 };
 use im_online::sr25519::AuthorityId as ImOnlineId;
 use authority_discovery_primitives::AuthorityId as AuthorityDiscoveryId;
@@ -78,6 +79,62 @@ use constants::{time::*, currency::*, fee::*};
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
+
+/// A transaction submitter with the given key type.
+pub type TransactionSubmitterOf<KeyType> =
+	TransactionSubmitter<KeyType, Runtime, UncheckedExtrinsic>;
+
+/// Submits transaction with the node's public and signature type. Adheres to the signed extension
+/// format of the chain.
+impl system::offchain::CreateTransaction<Runtime, UncheckedExtrinsic> for Runtime {
+	type Public = <Signature as sp_runtime::traits::Verify>::Signer;
+	type Signature = Signature;
+
+	fn create_transaction<TSigner: system::offchain::Signer<Self::Public, Self::Signature>>(
+		call: Call,
+		public: Self::Public,
+		account: AccountId,
+		nonce: Nonce,
+	) -> Option<(Call, <UncheckedExtrinsic as ExtrinsicT>::SignaturePayload)> {
+		// take the biggest period possible.
+		let period = BlockHashCount::get()
+			.checked_next_power_of_two()
+			.map(|c| c / 2)
+			.unwrap_or(2) as u64;
+
+		let current_block = System::block_number()
+			.saturated_into::<u64>()
+			// The `System::block_number` is initialized with `n+1`,
+			// so the actual block number is `n`.
+			.saturating_sub(1);
+
+		let tip = 0;
+
+		let extra: SignedExtra = (
+			OnlyStakingAndClaims,
+			system::CheckVersion::<Runtime>::new(),
+			system::CheckGenesis::<Runtime>::new(),
+			system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+			system::CheckNonce::<Runtime>::from(nonce),
+			system::CheckWeight::<Runtime>::new(),
+			transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+			registrar::LimitParathreadCommits::<Runtime>::default(),
+			parachains::ValidateDoubleVoteReports::<Runtime>::default(),
+			grandpa::ValidateEquivocationReport::<Runtime>::default(),
+		);
+
+		let raw_payload = SignedPayload::new(call, extra)
+			.map_err(|e| {
+				debug::warn!("Unable to create signed payload: {:?}", e);
+			})
+			.ok()?;
+
+		let signature = TSigner::sign(public, &raw_payload)?;
+		let (call, extra, _) = raw_payload.deconstruct();
+
+		Some((call, (account, signature, extra)))
+	}
+}
 
 // Polkadot version identifier;
 /// Runtime version (Polkadot).
@@ -469,8 +526,6 @@ impl offences::Trait for Runtime {
 
 impl authority_discovery::Trait for Runtime {}
 
-type SubmitTransaction = TransactionSubmitter<ImOnlineId, Runtime, UncheckedExtrinsic>;
-
 parameter_types! {
 	pub const SessionDuration: BlockNumber = EPOCH_DURATION_IN_BLOCKS as _;
 }
@@ -484,7 +539,7 @@ impl im_online::Trait for Runtime {
 	type AuthorityId = ImOnlineId;
 	type Event = Event;
 	type Call = Call;
-	type SubmitTransaction = SubmitTransaction;
+	type SubmitTransaction = TransactionSubmitterOf<ImOnlineId>;
 	type SessionDuration = SessionDuration;
 	type ReportUnresponsiveness = Offences;
 	type UnsignedPriority = ImOnlineUnsignedPriority;
@@ -492,6 +547,23 @@ impl im_online::Trait for Runtime {
 
 impl grandpa::Trait for Runtime {
 	type Event = Event;
+	type Call = Call;
+
+	type KeyOwnerProofSystem = Historical;
+
+	type KeyOwnerProof =
+		<Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, Vec<u8>)>>::Proof;
+
+	type KeyOwnerIdentification = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
+		KeyTypeId,
+		Vec<u8>,
+	)>>::IdentificationTuple;
+
+	type HandleEquivocation = grandpa::EquivocationHandler<
+		Self::KeyOwnerIdentification,
+		TransactionSubmitterOf<primitives::fisherman::FishermanId>,
+		Offences,
+	>;
 }
 
 parameter_types! {
@@ -539,9 +611,12 @@ impl parachains::Trait for Runtime {
 	type ValidationUpgradeDelay = ValidationUpgradeDelay;
 	type SlashPeriod = SlashPeriod;
 
-	type Proof = session::historical::Proof;
+	type Proof = sp_session::MembershipProof;
 	type KeyOwnerProofSystem = session::historical::Module<Self>;
-	type IdentificationTuple = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, Vec<u8>)>>::IdentificationTuple;
+	type IdentificationTuple = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
+		KeyTypeId,
+		Vec<u8>,
+	)>>::IdentificationTuple;
 	type ReportOffence = Offences;
 	type BlockHashConversion = sp_runtime::traits::Identity;
 }
@@ -676,16 +751,20 @@ pub type SignedExtra = (
 	system::CheckEra<Runtime>,
 	system::CheckNonce<Runtime>,
 	system::CheckWeight<Runtime>,
-	transaction_payment::ChargeTransactionPayment::<Runtime>,
+	transaction_payment::ChargeTransactionPayment<Runtime>,
 	registrar::LimitParathreadCommits<Runtime>,
-	parachains::ValidateDoubleVoteReports<Runtime>
+	parachains::ValidateDoubleVoteReports<Runtime>,
+	grandpa::ValidateEquivocationReport<Runtime>,
 );
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, Nonce, Call>;
+/// The payload being signed in transactions.
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
-pub type Executive = executive::Executive<Runtime, Block, system::ChainContext<Runtime>, Runtime, AllModules>;
+pub type Executive =
+	executive::Executive<Runtime, Block, system::ChainContext<Runtime>, Runtime, AllModules>;
 
 sp_api::impl_runtime_apis! {
 	impl sp_api::Core<Block> for Runtime {
@@ -790,6 +869,31 @@ sp_api::impl_runtime_apis! {
 	impl fg_primitives::GrandpaApi<Block> for Runtime {
 		fn grandpa_authorities() -> Vec<(GrandpaId, u64)> {
 			Grandpa::grandpa_authorities()
+		}
+
+		fn submit_report_equivocation_extrinsic(
+			equivocation_proof: fg_primitives::EquivocationProof<
+				<Block as BlockT>::Hash,
+				sp_runtime::traits::NumberFor<Block>,
+			>,
+			key_owner_proof: fg_primitives::OpaqueKeyOwnershipProof,
+		) -> Option<()> {
+			let key_owner_proof = key_owner_proof.decode()?;
+
+			Grandpa::submit_report_equivocation_extrinsic(
+				equivocation_proof,
+				key_owner_proof,
+			)
+		}
+
+		fn generate_key_ownership_proof(
+			authority_id: fg_primitives::AuthorityId,
+		) -> Option<fg_primitives::OpaqueKeyOwnershipProof> {
+			use codec::Encode;
+
+			Historical::prove((fg_primitives::KEY_TYPE, authority_id))
+				.map(|p| p.encode())
+				.map(fg_primitives::OpaqueKeyOwnershipProof::new)
 		}
 	}
 

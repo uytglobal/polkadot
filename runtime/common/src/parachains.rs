@@ -206,12 +206,12 @@ impl<T: session::Trait> Get<Vec<T::ValidatorId>> for ValidatorIdentities<T> {
 	}
 }
 
-/// A trait to get a session number the `Proof` belongs to.
+/// A trait to get a session number the `MembershipProof` belongs to.
 pub trait GetSessionNumber {
 	fn session(&self) -> SessionIndex;
 }
 
-impl GetSessionNumber for session::historical::Proof {
+impl GetSessionNumber for sp_session::MembershipProof {
 	fn session(&self) -> SessionIndex {
 		self.session()
 	}
@@ -1426,6 +1426,12 @@ impl<T> sp_std::fmt::Debug for ValidateDoubleVoteReports<T> where
 	}
 }
 
+impl<T> Default for ValidateDoubleVoteReports<T> {
+	fn default() -> ValidateDoubleVoteReports<T> {
+		ValidateDoubleVoteReports(Default::default())
+	}
+}
+
 /// Custom validity error used while validating double vote reports.
 #[derive(RuntimeDebug)]
 #[repr(u8)]
@@ -1897,7 +1903,7 @@ mod tests {
 	}
 
 	fn report_double_vote(
-		report: DoubleVoteReport<session::historical::Proof>,
+		report: DoubleVoteReport<sp_session::MembershipProof>,
 	) -> Result<ParachainsCall<Test>, TransactionValidityError> {
 		let inner = ParachainsCall::report_double_vote(report);
 		let call = Call::Parachains(inner.clone());

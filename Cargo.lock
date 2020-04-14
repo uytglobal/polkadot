@@ -4336,6 +4336,7 @@ dependencies = [
  "sp-io",
  "sp-keyring",
  "sp-runtime",
+ "sp-session",
  "sp-staking",
  "sp-std",
  "sp-trie",

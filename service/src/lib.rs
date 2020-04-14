@@ -76,10 +76,11 @@ native_executor_instance!(
 );
 
 /// A set of APIs that polkadot-like runtimes must implement.
-pub trait RuntimeApiCollection<Extrinsic: codec::Codec + Send + Sync + 'static> :
+pub trait RuntimeApiCollection<Extrinsic: codec::Codec + Send + Sync + 'static>:
 	sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
 	+ sp_api::ApiExt<Block, Error = sp_blockchain::Error>
 	+ babe_primitives::BabeApi<Block>
+	+ grandpa_primitives::GrandpaApi<Block>
 	+ ParachainHost<Block>
 	+ sp_block_builder::BlockBuilder<Block>
 	+ system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce>
@@ -99,6 +100,7 @@ where
 	sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>
 	+ sp_api::ApiExt<Block, Error = sp_blockchain::Error>
 	+ babe_primitives::BabeApi<Block>
+	+ grandpa_primitives::GrandpaApi<Block>
 	+ ParachainHost<Block>
 	+ sp_block_builder::BlockBuilder<Block>
 	+ system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Nonce>

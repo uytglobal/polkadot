@@ -304,6 +304,19 @@ impl staking::Trait for Runtime {
 
 impl grandpa::Trait for Runtime {
 	type Event = Event;
+	type Call = Call;
+
+	type KeyOwnerProofSystem = ();
+
+	type KeyOwnerProof =
+		<Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, Vec<u8>)>>::Proof;
+
+	type KeyOwnerIdentification = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
+		KeyTypeId,
+		Vec<u8>,
+	)>>::IdentificationTuple;
+
+	type HandleEquivocation = ();
 }
 
 parameter_types! {
@@ -340,11 +353,12 @@ impl parachains::Trait for Runtime {
 	type ValidationUpgradeDelay = ValidationUpgradeDelay;
 	type SlashPeriod = SlashPeriod;
 
-	type Proof = session::historical::Proof;
+	type Proof = sp_session::MembershipProof;
 	type KeyOwnerProofSystem = session::historical::Module<Self>;
-	type IdentificationTuple = <
-			Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, Vec<u8>)>
-		>::IdentificationTuple;
+	type IdentificationTuple = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
+		KeyTypeId,
+		Vec<u8>,
+	)>>::IdentificationTuple;
 	type ReportOffence = Offences;
 	type BlockHashConversion = sp_runtime::traits::Identity;
 }
@@ -575,6 +589,22 @@ sp_api::impl_runtime_apis! {
 	impl fg_primitives::GrandpaApi<Block> for Runtime {
 		fn grandpa_authorities() -> Vec<(GrandpaId, u64)> {
 			Grandpa::grandpa_authorities()
+		}
+
+		fn submit_report_equivocation_extrinsic(
+			_equivocation_proof: fg_primitives::EquivocationProof<
+				<Block as BlockT>::Hash,
+				sp_runtime::traits::NumberFor<Block>,
+			>,
+			_key_owner_proof: fg_primitives::OpaqueKeyOwnershipProof,
+		) -> Option<()> {
+			None
+		}
+
+		fn generate_key_ownership_proof(
+			_authority_id: fg_primitives::AuthorityId,
+		) -> Option<fg_primitives::OpaqueKeyOwnershipProof> {
+			None
 		}
 	}
 
