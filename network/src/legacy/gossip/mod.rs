@@ -435,13 +435,17 @@ impl RegisteredMessageValidator {
 	}
 
 	pub(crate) fn gossip_messages_for(&self, topic: Hash) -> GossipMessageStream {
+		println!("polkadot 18");
 		let topic_stream = if let Some(gossip_engine) = self.gossip_engine.as_ref() {
+			println!("polkadot 19");
 			gossip_engine.lock().messages_for(topic)
 		} else {
+			println!("polkadot 20");
 			log::error!("Called gossip_messages_for on a test engine");
 			futures::channel::mpsc::unbounded().1
 		};
 
+		println!("polkadot 21");
 		GossipMessageStream::new(topic_stream.boxed())
 	}
 

@@ -997,15 +997,33 @@ impl<Api, Sp, Gossip> Worker<Api, Sp, Gossip> where
 				self.protocol_handler.distribute_our_collation(targets, collation);
 			}
 			ServiceToWorkerMsg::ListenCheckedStatements(relay_parent, sender) => {
+				println!("polkadot 6");
 				let topic = crate::legacy::gossip::attestation_topic(relay_parent);
+				println!("polkadot 7");
 				let checked_messages = self.gossip_handle.gossip_messages_for(topic)
+					.map(|msg| {
+						println!("polkadot 14");
+						msg
+					})
 					.filter_map(|msg| match msg.0 {
-						GossipMessage::Statement(s) => future::ready(Some(s.signed_statement)),
-						_ => future::ready(None),
+						GossipMessage::Statement(s) => {
+							println!("polkadot 15");
+							future::ready(Some(s.signed_statement))
+						},
+						_ => {
+							println!("polkadot 16");
+							future::ready(None)
+						},
+					})
+					.map(|msg| {
+						println!("polkadot 17");
+						msg
 					})
 					.boxed();
+				println!("polkadot 8");
 
 				let _ = sender.send(checked_messages);
+				println!("polkadot 9");
 			}
 			#[cfg(test)]
 			ServiceToWorkerMsg::Synchronize(callback) => {
@@ -1382,27 +1400,46 @@ impl<N: NetworkServiceOps> Service<N> {
 	/// up until it is.
 	pub fn checked_statements(&self, relay_parent: Hash)
 		-> Pin<Box<dyn Stream<Item = SignedStatement> + Send>> {
+		println!("polkadot 0");
 		let (tx, rx) = oneshot::channel();
 		let mut sender = self.sender.clone();
+		println!("polkadot 1");
 
 		let receive_stream = async move {
+			println!("polkadot 2");
 			sender.send(
 				ServiceToWorkerMsg::ListenCheckedStatements(relay_parent, tx)
 			).map_err(future::Either::Left).await?;
+			println!("polkadot 3");
 
-			rx.map_err(future::Either::Right).await
+			let res = rx.map_err(future::Either::Right).await;
+			println!("polkadot 4");
+
+			res
 		};
 
 		receive_stream
+			.map(|res| {
+				println!("polkadot 5");
+				res
+			})
 			.map(|res| match res {
-				Ok(s) => s.left_stream(),
+				Ok(s) => {
+					println!("polkadot 10");
+					let res = s.left_stream();
+					println!("polkadot 11");
+					res
+				},
 				Err(e) => {
+					println!("polkadot 12");
 					log::warn!(
 						target: "p_net",
 						"Polkadot network worker appears to be down: {:?}",
 						e,
 					);
-					stream::pending().right_stream()
+					let res = stream::pending().right_stream();
+					println!("polkadot 13");
+					res
 				}
 			})
 			.flatten_stream()
