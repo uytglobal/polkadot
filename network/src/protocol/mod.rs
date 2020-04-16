@@ -928,6 +928,7 @@ impl<Api, Sp, Gossip> Worker<Api, Sp, Gossip> where
 					pov_block,
 					chunks,
 					&self.gossip_handle,
+					&self.protocol_handler.collators,
 				);
 			}
 			ServiceToWorkerMsg::FetchPoVBlock(candidate, mut sender) => {
@@ -1316,7 +1317,9 @@ fn distribute_validated_collation(
 	pov_block: PoVBlock,
 	chunks: (ValidatorIndex, Vec<ErasureChunk>),
 	gossip_handle: &impl GossipOps,
+	collators: &crate::legacy::collator_pool::CollatorPool,
 ) {
+	let peer_id = collators.collator_id_to_peer_id(&receipt.collator).expect("todo");
 	// produce a signed statement.
 	let hash = receipt.hash();
 	let validated = Validated::collated_local(
@@ -1334,7 +1337,8 @@ fn distribute_validated_collation(
 			}
 		);
 
-		gossip_handle.gossip_message(instance.attestation_topic, statement.into());
+		gossip_handle.gossip_message(instance.attestation_topic, statement.clone().into());
+		gossip_handle.send_message(peer_id.clone(), statement.into());
 	}
 
 	// gossip the PoV block.
