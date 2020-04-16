@@ -724,8 +724,9 @@ impl<C: ChainContext + ?Sized> sc_network_gossip::Validator<Block> for MessageVa
 
 			let attestation_head = attestation_view.topic_block(topic).map(|x| x.clone());
 			let peer = peers.get_mut(who);
+			println!("polkadot peer {:?} {:?}", peer.is_some(), who);
 
-			match GossipMessage::decode(&mut &data[..]) {
+			let res = match GossipMessage::decode(&mut &data[..]) {
 				Ok(GossipMessage::Statement(ref statement)) => {
 					// to allow statements, we need peer knowledge.
 					let peer_knowledge = peer.and_then(move |p| attestation_head.map(|r| (p, r)))
@@ -753,7 +754,11 @@ impl<C: ChainContext + ?Sized> sc_network_gossip::Validator<Block> for MessageVa
 					})
 				}
 				_ => false,
-			}
+			};
+
+			println!("polkadot message_allowed {}", res);
+
+			res
 		})
 	}
 }
