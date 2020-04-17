@@ -256,7 +256,7 @@ pub fn start<C, Api, SP>(
 
 	executor.spawn(async move {
 		while let Some(event) = event_stream.next().await {
-			println!("event 1");
+			println!("event {:?}", event);
 			let res = match event {
 				Event::Dht(_) => continue,
 				Event::NotificationStreamOpened {

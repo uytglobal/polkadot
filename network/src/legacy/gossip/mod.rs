@@ -672,6 +672,7 @@ impl<C: ChainContext + ?Sized> sc_network_gossip::Validator<Block> for MessageVa
 				if let GossipValidationResult::ProcessAndKeep(ref topic) = res {
 					context.broadcast_message(topic.clone(), data.to_vec(), false);
 				}
+				println!("receive statement");
 				(res, cb)
 			}
 			Ok(GossipMessage::PoVBlock(pov_block)) => {
