@@ -364,7 +364,8 @@ impl parachains::Trait for Runtime {
 	)>>::IdentificationTuple;
 	type ReportOffence = Offences;
 	type BlockHashConversion = sp_runtime::traits::Identity;
-	type SubmitSignedTransaction = TransactionSubmitter<parachain::FishermanId, Runtime, UncheckedExtrinsic>;
+	type SubmitSignedTransaction =
+		TransactionSubmitter<primitives::fisherman::FishermanId, Runtime, UncheckedExtrinsic>;
 }
 
 impl system::offchain::CreateTransaction<Runtime, UncheckedExtrinsic> for Runtime {

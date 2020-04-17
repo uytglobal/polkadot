@@ -433,7 +433,7 @@ impl parachains::Trait for Runtime {
 	)>>::IdentificationTuple;
 	type ReportOffence = Offences;
 	type BlockHashConversion = sp_runtime::traits::Identity;
-	type SubmitSignedTransaction = TransactionSubmitter<parachain::FishermanId, Runtime, UncheckedExtrinsic>;
+	type SubmitSignedTransaction = TransactionSubmitterOf<primitives::fisherman::FishermanId>;
 }
 
 /// Submits transaction with the node's public and signature type. Adheres to the signed extension
