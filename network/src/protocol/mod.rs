@@ -256,6 +256,7 @@ pub fn start<C, Api, SP>(
 
 	executor.spawn(async move {
 		while let Some(event) = event_stream.next().await {
+			println!("event 1");
 			let res = match event {
 				Event::Dht(_) => continue,
 				Event::NotificationStreamOpened {
@@ -281,12 +282,15 @@ pub fn start<C, Api, SP>(
 				} => {
 					let our_notifications = messages.into_iter()
 						.filter_map(|(engine, message)| if engine == POLKADOT_ENGINE_ID {
+							println!("event 2");
 							Some(message)
 						} else {
+							println!("event 3 {:?} {:?}", engine, message);
 							None
 						})
 						.collect();
 
+					println!("event 4");
 					worker_sender.send(
 						ServiceToWorkerMsg::PeerMessage(remote, our_notifications)
 					).await
@@ -296,6 +300,7 @@ pub fn start<C, Api, SP>(
 			if let Err(e) = res {
 				// full is impossible here, as we've `await`ed the value being sent.
 				if e.is_disconnected() {
+					println!("event 5");
 					break
 				}
 			}

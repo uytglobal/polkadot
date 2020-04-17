@@ -717,6 +717,7 @@ impl<C: ChainContext + ?Sized> sc_network_gossip::Validator<Block> for MessageVa
 				..
 			} = &mut *inner;
 
+			println!("polkadot peer {:?} {:?}", who, topic);
 			return true;
 
 			match intent {
