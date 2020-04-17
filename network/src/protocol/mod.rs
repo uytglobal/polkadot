@@ -573,6 +573,7 @@ impl ProtocolHandler {
 			match Message::decode(&mut raw_message.as_ref()) {
 				Ok(message) => {
 					self.service.report_peer(remote.clone(), benefit::VALID_FORMAT);
+					println!("raw message from {:?}: {:?}", remote, message);
 					match message {
 						Message::Status(status) => {
 							self.on_status(remote.clone(), status);
