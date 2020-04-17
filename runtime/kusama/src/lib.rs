@@ -34,14 +34,14 @@ use runtime_common::{attestations, claims, parachains, registrar, slots,
 };
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
-	ApplyExtrinsicResult, KeyTypeId, Percent, Permill, Perbill, RuntimeDebug,
+	ApplyExtrinsicResult, KeyTypeId, Percent, Permill, Perbill, Perquintill, RuntimeDebug,
 	transaction_validity::{
 		TransactionValidity, InvalidTransaction, TransactionValidityError, TransactionSource, TransactionPriority,
 	},
 	curve::PiecewiseLinear,
 	traits::{
-		BlakeTwo256, Block as BlockT, ConvertInto, DispatchInfoOf, Extrinsic as ExtrinsicT,
-		IdentityLookup, OpaqueKeys, SaturatedConversion, SignedExtension,
+		BlakeTwo256, Block as BlockT, SignedExtension, OpaqueKeys, ConvertInto, IdentityLookup,
+		DispatchInfoOf, Extrinsic as ExtrinsicT, SaturatedConversion,
 	},
 };
 #[cfg(feature = "runtime-benchmarks")]
@@ -53,7 +53,7 @@ use version::NativeVersion;
 use sp_core::OpaqueMetadata;
 use sp_staking::SessionIndex;
 use frame_support::{
-	construct_runtime, debug, parameter_types,
+	parameter_types, construct_runtime, debug,
 	traits::{KeyOwnerProofSystem, SplitTwoWays, Randomness},
 };
 use im_online::sr25519::AuthorityId as ImOnlineId;
@@ -83,66 +83,15 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 pub type TransactionSubmitterOf<KeyType> =
 	TransactionSubmitter<KeyType, Runtime, UncheckedExtrinsic>;
 
-/// Submits transaction with the node's public and signature type. Adheres to the signed extension
-/// format of the chain.
-impl system::offchain::CreateTransaction<Runtime, UncheckedExtrinsic> for Runtime {
-	type Public = <Signature as sp_runtime::traits::Verify>::Signer;
-	type Signature = Signature;
-
-	fn create_transaction<TSigner: system::offchain::Signer<Self::Public, Self::Signature>>(
-		call: Call,
-		public: Self::Public,
-		account: AccountId,
-		nonce: Nonce,
-	) -> Option<(Call, <UncheckedExtrinsic as ExtrinsicT>::SignaturePayload)> {
-		// take the biggest period possible.
-		let period = BlockHashCount::get()
-			.checked_next_power_of_two()
-			.map(|c| c / 2)
-			.unwrap_or(2) as u64;
-
-		let current_block = System::block_number()
-			.saturated_into::<u64>()
-			// The `System::block_number` is initialized with `n+1`,
-			// so the actual block number is `n`.
-			.saturating_sub(1);
-
-		let tip = 0;
-
-		let extra: SignedExtra = (
-			RestrictFunctionality,
-			system::CheckVersion::<Runtime>::new(),
-			system::CheckGenesis::<Runtime>::new(),
-			system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
-			system::CheckNonce::<Runtime>::from(nonce),
-			system::CheckWeight::<Runtime>::new(),
-			transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
-			registrar::LimitParathreadCommits::<Runtime>::default(),
-			parachains::ValidateDoubleVoteReports::<Runtime>::default(),
-			grandpa::ValidateEquivocationReport::<Runtime>::default(),
-		);
-
-		let raw_payload = SignedPayload::new(call, extra)
-			.map_err(|e| {
-				debug::warn!("Unable to create signed payload: {:?}", e);
-			})
-			.ok()?;
-
-		let signature = TSigner::sign(public, &raw_payload)?;
-		let (call, extra, _) = raw_payload.deconstruct();
-
-		Some((call, (account, signature, extra)))
-	}
-}
-
 /// Runtime version (Kusama).
 pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("kusama"),
 	impl_name: create_runtime_str!("parity-kusama"),
 	authoring_version: 2,
-	spec_version: 1057,
-	impl_version: 1,
+	spec_version: 1058,
+	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
+	transaction_version: 1,
 };
 
 /// Native version.
@@ -200,6 +149,7 @@ impl system::Trait for Runtime {
 	type Event = Event;
 	type BlockHashCount = BlockHashCount;
 	type MaximumBlockWeight = MaximumBlockWeight;
+	type DbWeight = ();
 	type MaximumBlockLength = MaximumBlockLength;
 	type AvailableBlockRatio = AvailableBlockRatio;
 	type Version = Version;
@@ -264,7 +214,7 @@ parameter_types! {
 	pub const TransactionBaseFee: Balance = 1 * CENTS;
 	pub const TransactionByteFee: Balance = 10 * MILLICENTS;
 	// for a sane configuration, this should always be less than `AvailableBlockRatio`.
-	pub const TargetBlockFullness: Perbill = Perbill::from_percent(25);
+	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
 }
 
 impl transaction_payment::Trait for Runtime {
@@ -613,6 +563,52 @@ impl parachains::Trait for Runtime {
 	)>>::IdentificationTuple;
 	type ReportOffence = Offences;
 	type BlockHashConversion = sp_runtime::traits::Identity;
+	type SubmitSignedTransaction = TransactionSubmitter<parachain::FishermanId, Runtime, UncheckedExtrinsic>;
+}
+
+/// Submits transaction with the node's public and signature type. Adheres to the signed extension
+/// format of the chain.
+impl system::offchain::CreateTransaction<Runtime, UncheckedExtrinsic> for Runtime {
+	type Public = <primitives::Signature as sp_runtime::traits::Verify>::Signer;
+	type Signature = primitives::Signature;
+
+	fn create_transaction<TSigner: system::offchain::Signer<Self::Public, Self::Signature>>(
+		call: <UncheckedExtrinsic as ExtrinsicT>::Call,
+		public: Self::Public,
+		account: <Runtime as system::Trait>::AccountId,
+		nonce: <Runtime as system::Trait>::Index,
+	) -> Option<(Call, <UncheckedExtrinsic as ExtrinsicT>::SignaturePayload)> {
+		// take the biggest period possible.
+		let period = BlockHashCount::get()
+			.checked_next_power_of_two()
+			.map(|c| c / 2)
+			.unwrap_or(2) as u64;
+
+		let current_block = System::block_number()
+			.saturated_into::<u64>()
+			// The `System::block_number` is initialized with `n+1`,
+			// so the actual block number is `n`.
+			.saturating_sub(1);
+		let tip = 0;
+		let extra: SignedExtra = (
+			RestrictFunctionality,
+			system::CheckVersion::<Runtime>::new(),
+			system::CheckGenesis::<Runtime>::new(),
+			system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+			system::CheckNonce::<Runtime>::from(nonce),
+			system::CheckWeight::<Runtime>::new(),
+			transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+			registrar::LimitParathreadCommits::<Runtime>::new(),
+			parachains::ValidateDoubleVoteReports::<Runtime>::new(),
+			grandpa::ValidateEquivocationReport::<Runtime>::default(),
+		);
+		let raw_payload = SignedPayload::new(call, extra).map_err(|e| {
+			debug::warn!("Unable to create signed payload: {:?}", e)
+		}).ok()?;
+		let signature = TSigner::sign(public, &raw_payload)?;
+		let (call, extra, _) = raw_payload.deconstruct();
+		Some((call, (account, signature, extra)))
+	}
 }
 
 parameter_types! {
@@ -842,11 +838,10 @@ pub type SignedExtra = (
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
 pub type CheckedExtrinsic = generic::CheckedExtrinsic<AccountId, Nonce, Call>;
-/// The payload being signed in transactions.
-pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 /// Executive: handles dispatch to the various modules.
-pub type Executive =
-	executive::Executive<Runtime, Block, system::ChainContext<Runtime>, Runtime, AllModules>;
+pub type Executive = executive::Executive<Runtime, Block, system::ChainContext<Runtime>, Runtime, AllModules>;
+/// The payload being signed in the transactions.
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
 sp_api::impl_runtime_apis! {
 	impl sp_api::Core<Block> for Runtime {
