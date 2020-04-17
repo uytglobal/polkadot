@@ -281,7 +281,7 @@ pub fn start<C, Api, SP>(
 					messages,
 				} => {
 					let our_notifications = messages.into_iter()
-						.filter_map(|(engine, message)| if engine == POLKADOT_ENGINE_ID {
+						.filter_map(|(engine, message)| if engine == POLKADOT_ENGINE_ID || true {
 							println!("event 2");
 							Some(message)
 						} else {
